@@ -45,52 +45,105 @@
 #          --capabilities CAPABILITY_IAM
 
 
-name: Deploy SAM Application
+# name: Deploy SAM Application
 
+# on:
+#   push:
+#     branches:
+#       - main
+#       - develop
+#   workflow_dispatch:
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+
+#       - name: Set environment based on branch
+#         id: set-env
+#         run: |
+#           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+#             echo "CONFIG_ENV=prod" >> $GITHUB_OUTPUT
+#           else
+#             echo "CONFIG_ENV=dev" >> $GITHUB_OUTPUT
+#           fi
+
+#       - name: Setup AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: eu-central-1
+
+#       - name: Setup SAM CLI
+#         uses: aws-actions/setup-sam@v2
+
+#       - name: Setup Java 21
+#         uses: actions/setup-java@v3
+#         with:
+#           distribution: 'temurin'
+#           java-version: '21'
+
+#       - name: Build SAM application
+#         run: sam build
+
+#       - name: Deploy SAM application
+#         run: |
+#           sam deploy \
+#             --config-env ${{ steps.set-env.outputs.CONFIG_ENV }} \
+#             --no-confirm-changeset \
+#             --no-fail-on-empty-changeset
+
+
+name: Deploy SAM Application
 on:
   push:
     branches:
       - main
       - develop
   workflow_dispatch:
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
+      
       - name: Set environment based on branch
         id: set-env
         run: |
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            echo "CONFIG_ENV=prod" >> $GITHUB_OUTPUT
+            echo "ENV=prod" >> $GITHUB_OUTPUT
+            echo "EMAIL=nictech23@gmail.com" >> $GITHUB_OUTPUT
           else
-            echo "CONFIG_ENV=dev" >> $GITHUB_OUTPUT
+            echo "ENV=dev" >> $GITHUB_OUTPUT
+            echo "EMAIL=dev-notifications@example.com" >> $GITHUB_OUTPUT
           fi
-
+      
       - name: Setup AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-central-1
-
+      
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v2
-
+      
       - name: Setup Java 21
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '21'
-
+      
       - name: Build SAM application
         run: sam build
-
+      
       - name: Deploy SAM application
         run: |
           sam deploy \
-            --config-env ${{ steps.set-env.outputs.CONFIG_ENV }} \
+            --stack-name s3-notification-system-${{ steps.set-env.outputs.ENV }} \
+            --parameter-overrides Environment=${{ steps.set-env.outputs.ENV }} EmailAddress=${{ steps.set-env.outputs.EMAIL }} \
             --no-confirm-changeset \
-            --no-fail-on-empty-changeset
+            --no-fail-on-empty-changeset \
+            --capabilities CAPABILITY_IAM
