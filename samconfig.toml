@@ -13,6 +13,7 @@ confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev\" EmailAddress=\"nictech23@gmail.com\""
 image_repositories = []
+
 [dev]
 [dev.deploy]
 [dev.deploy.parameters]
