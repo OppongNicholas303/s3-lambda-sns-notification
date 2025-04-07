@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'AWS SAM Template for S3-Lambda-SNS Notification System
+
+  '
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+    - dev
+    - prod
+    Description: Environment name
+  EmailAddress:
+    Type: String
+    Default: nictech23@gmail.com
+    Description: Email address to receive notifications
+Resources:
+  UploadBucket:
+    Type: AWS::S3::Bucket
+    DependsOn: S3InvokeLambdaPermission
+    Properties:
+      BucketName:
+        Fn::Sub: ${AWS::StackName}-uploads-${Environment}
+      NotificationConfiguration:
+        LambdaConfigurations:
+        - Event: s3:ObjectCreated:*
+          Function:
+            Fn::GetAtt:
+            - S3NotificationFunction
+            - Arn
+      CorsConfiguration:
+        CorsRules:
+        - AllowedHeaders:
+          - '*'
+          AllowedMethods:
+          - GET
+          - PUT
+          - POST
+          - DELETE
+          - HEAD
+          AllowedOrigins:
+          - '*'
+          MaxAge: 3600
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName:
+        Fn::Sub: ${AWS::StackName}-notifications-${Environment}
+      DisplayName: File Upload Notifications
+  EmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      TopicArn:
+        Ref: NotificationTopic
+      Endpoint:
+        Ref: EmailAddress
+  S3NotificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: S3NotificationFunction
+      Handler: com.example.S3EventHandler::handleRequest
+      Runtime: java21
+      Architectures:
+      - x86_64
+      MemorySize: 512
+      Timeout: 30
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN:
+            Ref: NotificationTopic
+          ENVIRONMENT:
+            Ref: Environment
+      Policies:
+      - S3ReadPolicy:
+          BucketName:
+            Fn::Sub: ${AWS::StackName}-uploads-${Environment}
+      - SNSPublishMessagePolicy:
+          TopicName:
+            Fn::GetAtt:
+            - NotificationTopic
+            - TopicName
+    Metadata:
+      SamResourceId: S3NotificationFunction
+  S3InvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: S3NotificationFunction
+      Principal: s3.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:s3:::${AWS::StackName}-uploads-${Environment}
+      SourceAccount:
+        Ref: AWS::AccountId
+Outputs:
+  UploadBucketName:
+    Description: S3 bucket for uploading files
+    Value:
+      Ref: UploadBucket
+  NotificationTopicARN:
+    Description: SNS Topic ARN for notifications
+    Value:
+      Ref: NotificationTopic
+  S3NotificationFunctionARN:
+    Description: Lambda function ARN
+    Value:
+      Fn::GetAtt:
+      - S3NotificationFunction
+      - Arn
