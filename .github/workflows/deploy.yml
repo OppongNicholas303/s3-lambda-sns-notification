@@ -117,7 +117,7 @@ jobs:
             echo "EMAIL=nictech23@gmail.com" >> $GITHUB_OUTPUT
           else
             echo "ENV=dev" >> $GITHUB_OUTPUT
-            echo "EMAIL=dev-notifications@example.com" >> $GITHUB_OUTPUT
+            echo "EMAIL=nictech23@gmail.com" >> $GITHUB_OUTPUT
           fi
       
       - name: Setup AWS credentials
