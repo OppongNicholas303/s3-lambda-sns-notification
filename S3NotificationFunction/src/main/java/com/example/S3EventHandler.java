@@ -20,15 +20,8 @@ public class S3EventHandler implements RequestHandler<S3Event, String> {
     private final String snsTopicArn;
     private final String environment;
 
-    // Default constructor used by AWS Lambda
-//    public S3EventHandler() {
-//        this(
-//                System.getenv("SNS_TOPIC_ARN"),
-//                System.getenv("ENVIRONMENT"),
-//                System.getenv("AWS_REGION") != null ? System.getenv("AWS_REGION") : "us-east-1"
-//        );
-//    }
 
+    // Default constructor used by AWS Lambda
     public S3EventHandler() {
         this(
                 System.getenv("SNS_TOPIC_ARN"),
@@ -111,24 +104,6 @@ public class S3EventHandler implements RequestHandler<S3Event, String> {
         return String.format("[%s] New File Upload Notification", environment.toUpperCase());
     }
 
-//    private PublishResponse publishToSns(String message, String subject) {
-//        if (snsTopicArn == null || snsTopicArn.isEmpty()) {
-//            throw new IllegalStateException("SNS Topic ARN is not configured");
-//        }
-//
-//        try {
-//            PublishRequest request = PublishRequest.builder()
-//                    .message(message)
-//                    .subject(subject)
-//                    .topicArn(snsTopicArn)
-//                    .build();
-//
-//            return snsClient.publish(request);
-//        } catch (SnsException e) {
-//            logger.severe("SNS publish error: " + e.getMessage());
-//            throw e;
-//        }
-//    }
 
     private PublishResponse publishToSns(String message, String subject) {
         logger.info("Attempting to publish to SNS with Topic ARN: " + snsTopicArn);
